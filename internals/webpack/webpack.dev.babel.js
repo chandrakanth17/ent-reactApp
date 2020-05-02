@@ -2,19 +2,19 @@
  * DEVELOPMENT WEBPACK CONFIGURATION
  */
 
-const path = require('path');
-const fs = require('fs');
-const webpack = require('webpack');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const logger = require('../../server/logger');
-const cheerio = require('cheerio');
-const pkg = require(path.resolve(process.cwd(), 'package.json'));
+const path = require("path");
+const fs = require("fs");
+const webpack = require("webpack");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const logger = require("../../server/logger");
+const cheerio = require("cheerio");
+const pkg = require(path.resolve(process.cwd(), "package.json"));
 const dllPlugin = pkg.dllPlugin;
 
 // PostCSS plugins
-const cssnext = require('postcss-cssnext');
-const postcssFocus = require('postcss-focus');
-const postcssReporter = require('postcss-reporter');
+const cssnext = require("postcss-cssnext");
+const postcssFocus = require("postcss-focus");
+const postcssReporter = require("postcss-reporter");
 
 const plugins = [
   new webpack.HotModuleReplacementPlugin(), // Tell webpack we want hot reloading
@@ -25,44 +25,47 @@ const plugins = [
   }),
 ];
 
-module.exports = require('./webpack.base.babel')({
+module.exports = require("./webpack.base.babel")({
   // Add hot reloading in development
   entry: [
-    'eventsource-polyfill', // Necessary for hot reloading with IE
-    'webpack-hot-middleware/client',
-    path.join(process.cwd(), 'app/app.js'), // Start with js/app.js
+    "eventsource-polyfill", // Necessary for hot reloading with IE
+    "webpack-hot-middleware/client",
+    path.join(process.cwd(), "app/app.js"), // Start with js/app.js
   ],
 
   // Don't use hashes in dev mode for better performance
   output: {
-    filename: '[name].js',
-    chunkFilename: '[name].chunk.js',
+    filename: "[name].js",
+    chunkFilename: "[name].chunk.js",
   },
 
   // Add development plugins
   plugins: dependencyHandlers().concat(plugins), // eslint-disable-line no-use-before-define
 
   // Load the CSS in a style tag in development
-  cssLoaders: 'style-loader!css-loader?localIdentName=[local]__[path][name]__[hash:base64:5]&modules&importLoaders=1&sourceMap!postcss-loader',
+  cssLoaders:
+    "style-loader!css-loader?localIdentName=[local]__[path][name]__[hash:base64:5]&modules&importLoaders=1&sourceMap!postcss-loader",
 
   // Process the CSS with PostCSS
   postcssPlugins: [
     postcssFocus(), // Add a :focus to every :hover
-    cssnext({ // Allow future CSS features to be used, also auto-prefixes the CSS...
-      browsers: ['last 2 versions', 'IE > 10'], // ...based on this browser list
+    cssnext({
+      // Allow future CSS features to be used, also auto-prefixes the CSS...
+      browsers: ["last 2 versions", "IE > 10"], // ...based on this browser list
     }),
-    postcssReporter({ // Posts messages from plugins to the terminal
+    postcssReporter({
+      // Posts messages from plugins to the terminal
       clearMessages: true,
     }),
   ],
 
   // Tell babel that we want to hot-reload
   babelQuery: {
-    presets: ['react-hmre'],
+    presets: ["react-hmre"],
   },
 
   // Emit a source map for easier debugging
-  devtool: 'cheap-module-eval-source-map',
+  devtool: "source-map",
 });
 
 /**
@@ -76,13 +79,15 @@ module.exports = require('./webpack.base.babel')({
  */
 function dependencyHandlers() {
   // Don't do anything during the DLL Build step
-  if (process.env.BUILDING_DLL) { return []; }
+  if (process.env.BUILDING_DLL) {
+    return [];
+  }
 
   // If the package.json does not have a dllPlugin property, use the CommonsChunkPlugin
   if (!dllPlugin) {
     return [
       new webpack.optimize.CommonsChunkPlugin({
-        name: 'vendor',
+        name: "vendor",
         children: true,
         minChunks: 2,
         async: true,
@@ -90,7 +95,10 @@ function dependencyHandlers() {
     ];
   }
 
-  const dllPath = path.resolve(process.cwd(), dllPlugin.path || 'node_modules/react-boilerplate-dlls');
+  const dllPath = path.resolve(
+    process.cwd(),
+    dllPlugin.path || "node_modules/react-boilerplate-dlls"
+  );
 
   /**
    * If DLLs aren't explicitly defined, we assume all production dependencies listed in package.json
@@ -99,10 +107,12 @@ function dependencyHandlers() {
    * @see https://github.com/mxstbr/react-boilerplate/tree/master/docs/general/webpack.md
    */
   if (!dllPlugin.dlls) {
-    const manifestPath = path.resolve(dllPath, 'reactBoilerplateDeps.json');
+    const manifestPath = path.resolve(dllPath, "reactBoilerplateDeps.json");
 
     if (!fs.existsSync(manifestPath)) {
-      logger.error('The DLL manifest is missing. Please run `npm run build:dll`');
+      logger.error(
+        "The DLL manifest is missing. Please run `npm run build:dll`"
+      );
       process.exit(0);
     }
 
@@ -115,14 +125,20 @@ function dependencyHandlers() {
   }
 
   // If DLLs are explicitly defined, we automatically create a DLLReferencePlugin for each of them.
-  const dllManifests = Object.keys(dllPlugin.dlls).map((name) => path.join(dllPath, `/${name}.json`));
+  const dllManifests = Object.keys(dllPlugin.dlls).map((name) =>
+    path.join(dllPath, `/${name}.json`)
+  );
 
   return dllManifests.map((manifestPath) => {
     if (!fs.existsSync(path)) {
       if (!fs.existsSync(manifestPath)) {
-        logger.error(`The following Webpack DLL manifest is missing: ${path.basename(manifestPath)}`);
+        logger.error(
+          `The following Webpack DLL manifest is missing: ${path.basename(
+            manifestPath
+          )}`
+        );
         logger.error(`Expected to find it in ${dllPath}`);
-        logger.error('Please run: npm run build:dll');
+        logger.error("Please run: npm run build:dll");
 
         process.exit(0);
       }
@@ -140,17 +156,23 @@ function dependencyHandlers() {
  * DLL Javascript files are loaded in script tags and available to our application.
  */
 function templateContent() {
-  const html = fs.readFileSync(
-    path.resolve(process.cwd(), 'app/index.html')
-  ).toString();
+  const html = fs
+    .readFileSync(path.resolve(process.cwd(), "app/index.html"))
+    .toString();
 
-  if (!dllPlugin) { return html; }
+  if (!dllPlugin) {
+    return html;
+  }
 
   const doc = cheerio(html);
-  const body = doc.find('body');
-  const dllNames = !dllPlugin.dlls ? ['reactBoilerplateDeps'] : Object.keys(dllPlugin.dlls);
+  const body = doc.find("body");
+  const dllNames = !dllPlugin.dlls
+    ? ["reactBoilerplateDeps"]
+    : Object.keys(dllPlugin.dlls);
 
-  dllNames.forEach(dllName => body.append(`<script data-dll='true' src='/${dllName}.dll.js'></script>`));
+  dllNames.forEach((dllName) =>
+    body.append(`<script data-dll='true' src='/${dllName}.dll.js'></script>`)
+  );
 
   return doc.toString();
 }

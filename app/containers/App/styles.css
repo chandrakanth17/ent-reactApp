@@ -3,7 +3,12 @@
  *
  * App container styles
  */
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700");
+@import url("https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css");
 
+* {
+  box-sizing: border-box;
+}
 .container {
   display: block;
 }
